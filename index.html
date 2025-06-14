@@ -46,7 +46,7 @@
         { fps: 10, qrbox:250 },
         (msg) => {
           const time = new Date().toLocaleString();
-          record.push({ data: msg, time });
+          record.push({ VehicleNumber : msg, time });
           const r = tbody.insertRow();
           r.insertCell().innerText = msg;
           r.insertCell().innerText = time;
