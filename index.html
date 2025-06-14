@@ -50,3 +50,96 @@
 
     th, td {
       border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      word-wrap: break-word;
+    }
+
+    .footer {
+      background-color: #34495e;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    @media screen and (max-width: 600px) {
+      button {
+        width: 90%;
+        margin: 5px auto;
+        display: block;
+        font-size: 16px;
+      }
+
+      table, th, td {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Scan & Save</h1>
+  <div id="reader"></div>
+  <div id="controls">
+    <button id="start">Start</button>
+    <button id="stop" disabled>Stop</button>
+    <button id="export">Export Excel</button>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Vehicle Number</th><th>Timestamp</th></tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
+
+  <script>
+    const startBtn = document.getElementById('start');
+    const stopBtn  = document.getElementById('stop');
+    const exportBtn= document.getElementById('export');
+    const tbody    = document.getElementById('results');
+    let scanner, record = [];
+
+    startBtn.onclick = () => {
+      scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (msg) => {
+          const time = new Date().toLocaleString();
+          record.push({ VehicleNumber : msg, time });
+          const r = tbody.insertRow();
+          r.insertCell().innerText = msg;
+          r.insertCell().innerText = time;
+          scanner.stop();
+          stopBtn.disabled = true;
+          startBtn.disabled = false;
+        },
+        err => { /* ignored */ }
+      ).then(() => {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      }).catch(console.error);
+    };
+
+    stopBtn.onclick = () => {
+      if (scanner) {
+        scanner.stop().then(() => {
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }).catch(console.error);
+      }
+    };
+
+    exportBtn.onclick = () => {
+      if (!record.length) return alert('No scans to export.');
+      const ws = XLSX.utils.json_to_sheet(record);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "QR Scans");
+      XLSX.writeFile(wb, "qr_scans.xlsx");
+    };
+  </script>
+
+  <div class="footer">Developed by: V. Jagannath. N. Hugar</div>
+</body>
+</html>
